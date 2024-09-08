@@ -8,7 +8,7 @@ AWS_ACCESS_KEY_ID
 AWS_SECRET_ACCESS_KEY    
 ```
 
-## Key Pairs for EC2/Ansible
+## Key Pairs for EC2/Ansible.
 
 1. Create key pair in AWS. [https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/create-key-pairs.html](docs)
 2. Save pem file to a safe place.
