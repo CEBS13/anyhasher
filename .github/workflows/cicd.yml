@@ -31,29 +31,29 @@ jobs:
       backend_url: ${{ needs.cd-backend.outputs.backend_url }}
     secrets: inherit
 
-  # promote:
-  #   needs: [cd-frontend]
-  #   uses: ./.github/workflows/promote.yml
-  #   with: 
-  #     ref: ${{ github.sha }}
-  #     s3_bucket_hostname: ${{ needs.cd-frontend.outputs.s3_bucket_hostname }}
-  #   secrets: inherit
+  promote:
+    needs: [cd-frontend]
+    uses: ./.github/workflows/promote.yml
+    with: 
+      ref: ${{ github.sha }}
+      s3_bucket_hostname: ${{ needs.cd-frontend.outputs.s3_bucket_hostname }}
+    secrets: inherit
 
-  # cleanup:
-  #   needs: [promote]
-  #   uses: ./.github/workflows/cleanup.yml
-  #   with: 
-  #     ref: ${{ needs.promote.outputs.previous_ref }}
-  #     env_name: Previous Blue
-  #     reason: decommissioning
-  #   secrets: inherit
+  cleanup:
+    needs: [promote]
+    uses: ./.github/workflows/cleanup.yml
+    with: 
+      ref: ${{ needs.promote.outputs.previous_ref }}
+      env_name: Previous Blue
+      reason: decommissioning
+    secrets: inherit
 
-  # failure:
-  #   needs: [cd-backend, cd-frontend, promote]
-  #   if: failure()
-  #   uses: ./.github/workflows/cleanup.yml
-  #   with: 
-  #     ref: ${{ github.sha }}
-  #     env_name: Green
-  #     reason: failure
-  #   secrets: inherit
+  failure:
+    needs: [cd-backend, cd-frontend, promote]
+    if: failure()
+    uses: ./.github/workflows/cleanup.yml
+    with: 
+      ref: ${{ github.sha }}
+      env_name: Green
+      reason: failure
+    secrets: inherit
