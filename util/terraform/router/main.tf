@@ -8,8 +8,8 @@ terraform {
   required_version = ">= 1.2.0"  
 
   backend "s3" {
-    bucket = "anyhasher.terraform.states"
-    key    = "anyhasher-fe-01.tfstate"
+    bucket = "anyhasher.terraform.state-01"
+    key    = "anyhasher-fe.tfstate"
     region = "us-east-1"
   }
 }
