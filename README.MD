@@ -1,5 +1,5 @@
 
-## AWS Login Credentials.
+## AWS Login Credentials
 
 1. Create an IAM user with CLI access.
 2. Copy the key id and the key to your Github repo's [settings/secrets/actions](secrets) using the variable names below.
