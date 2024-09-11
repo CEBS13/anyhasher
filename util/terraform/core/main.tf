@@ -17,15 +17,7 @@ provider "aws" {
   region = "us-east-1"
 }
 
-module "ec2" {
-  source = "./modules/ec2"
+module "alb" {
+  source = "./modules/alb"
   
-}
-
-output "ec2_frontend_public_ip" {
-  value = module.ec2.ec2_public_ip
-}
-
-output "ec2_frontend_public_url" {
-  value = module.ec2.ec2_public_url
 }

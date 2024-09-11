@@ -24,11 +24,48 @@ on:
       
 jobs:
   provision:
+    name: 🏛️ Provision Core Infrastructure
+    outputs:
+      #frontend_url: http://${{ steps.apply_changes.outputs.ec2_frontend_public_url }}:3000
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Use commit workspace
+        uses: dflook/terraform-new-workspace@v1
+        with:
+          path: util/terraform/core
+          workspace: anyhasher-frontend-${{ inputs.ref }}
+
+      - name: Provision 
+        id: provision
+        uses: dflook/terraform-apply@v1
+        with:
+          workspace: anyhasher-core-${{ inputs.ref }}
+          auto_approve: true
+          path: util/terraform/core
+            #variables: |
+              #bucket_name = "anyhasher-frontend-${{ inputs.ref }}"          
+  
+  provision-frontend: 
     name: 🏛️ Provision Frontend Infrastructure
     outputs:
-      frontend_url: http://${{ steps.provision.outputs.website_endpoint }}
-      s3_bucket_hostname: ${{ steps.provision.outputs.website_endpoint }}
-      bucket_name: ${{ steps.provision.outputs.bucket_name }}
+      frontend_url: http://${{ steps.apply_changes.outputs.ec2_frontend_public_url }}:3000
+      frontend_host: ${{ steps.apply_changes.outputs.ec2_frontend_public_url }}
+      #frontend_url: http://${{ steps.provision.outputs.website_endpoint }}
+      #s3_bucket_hostname: ${{ steps.provision.outputs.website_endpoint }}
+      #bucket_name: ${{ steps.provision.outputs.bucket_name }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -57,9 +94,50 @@ jobs:
           workspace: anyhasher-frontend-${{ inputs.ref }}
           auto_approve: true
           path: util/terraform/frontend
-          variables: |
-            bucket_name = "anyhasher-frontend-${{ inputs.ref }}"
+          #variables: |
+            #bucket_name = "anyhasher-frontend-${{ inputs.ref }}"
 
+  deploy:
+    name: 🚛 Deploy Frontend Artifact
+    needs: [provision]
+    runs-on: ubuntu-latest
+    environment:
+      name: Green Frontend
+      url: ${{ needs.provision.outputs.frontend_url }}
+    steps:
+      - name: Get Frontend Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-artifact-${{ inputs.ref }}
+          path: frontend/build
+
+      - name: Prepare frontend with backend url
+        uses: jacobtomlinson/gha-find-replace@v3
+        with:
+          find: http://localhost:5001
+          replace: ${{ inputs.backend_url }}
+          #regex: false
+
+      - name: Store Release Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-release-${{ inputs.ref }}
+          path: frontend/build
+
+      - name: Configure Backend Infrastructure
+        uses: dawidd6/action-ansible-playbook@v2
+        with:
+          playbook: deploy.yml
+          directory: ./util/ansible-fe
+          key: ${{ secrets.EC2_PRIVATE_KEY }}
+          inventory: |
+            [ec2]
+            ${{ needs.provision.outputs.backend_host }} ansible_user=ubuntu
+          options: |
+            --verbose
+  
+  
+  
   deploy:
     name: 🚚 Deploy Frontend Artifact
     needs: [provision]

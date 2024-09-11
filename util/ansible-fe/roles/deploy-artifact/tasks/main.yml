@@ -1,0 +1,8 @@
+---
+- name: Deploy Frontend Artifact
+  synchronize: # "copy" takes too long!
+    src: "../../frontend/build"
+    dest: ~/anyhasher
+
+- name: Start Server
+  shell: "cd ~/anyhasher/build && pm2 npm start"

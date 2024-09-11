@@ -20,3 +20,6 @@ output "ec2_public_url" {
   value = aws_instance.anyhasher_server.public_dns
 }
 
+output "ec2_instance_id" {
+  value = aws_instance.anyhasher_server.id
+}
